@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Decoding Trainer",
+  title: "Morphology and Multisyllable Words",
   description:
     "A dyslexia-friendly morphology trainer to practise roots, prefixes, and suffixes.",
 };

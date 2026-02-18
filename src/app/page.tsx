@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import type { GradeBand, Focus } from "@/lib/types";
 
 const GRADE_BANDS: { value: GradeBand | "All"; label: string }[] = [
-  { value: "All", label: "All grades" },
-  { value: "3-4", label: "Grades 3–4" },
-  { value: "5-6", label: "Grades 5–6" },
-  { value: "7-8", label: "Grades 7–8" },
+  { value: "All", label: "All Levels" },
+  { value: "3-4", label: "Level 1 Words" },
+  { value: "5-6", label: "Level 2 Words" },
+  { value: "7-8", label: "Level 3 Words" },
 ];
 
 const FOCUS_OPTIONS: { value: Focus; label: string; description: string }[] = [
@@ -88,7 +88,7 @@ export default function HomePage() {
               color: "var(--color-brand-dark)",
             }}
           >
-            Decoding Trainer
+            Morphology and Multisyllable Words
           </h1>
         </div>
         <p
@@ -98,11 +98,66 @@ export default function HomePage() {
             lineHeight: "var(--leading-relaxed)",
           }}
         >
-          Build your word-reading skills one morpheme at a time.
+          Build your reading skills one morpheme at a time.
           <br />
-          Choose your level and focus, then start practising.
+          Choose your level and focus, then start practicing.
         </p>
       </header>
+
+      {/* ── How it works ── */}
+      <section
+        style={{
+          maxWidth: 680,
+          width: "100%",
+          marginBottom: "var(--space-8)",
+        }}
+        aria-label="How to use this app"
+      >
+        <h2
+          style={{
+            fontSize: "var(--text-md)",
+            fontWeight: 700,
+            color: "var(--color-text-secondary)",
+            marginBottom: "var(--space-4)",
+          }}
+        >
+          How it works
+        </h2>
+        <ul
+          style={{
+            listStyle: "none",
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--space-3)",
+          }}
+        >
+          {[
+            ["👂", "Listen", "Hear the word spoken aloud."],
+            ["🔍", "Chunk it", "Break the word into syllables by sound, or by meaning using roots and affixes."],
+            ["✅", "Meaning Check", "Choose the right definition from 4 options."],
+            ["⭐", "Mark Tricky", "Flag words you want to revisit."],
+          ].map(([icon, title, desc]) => (
+            <li
+              key={title}
+              style={{
+                display: "flex",
+                gap: "var(--space-4)",
+                alignItems: "flex-start",
+                fontSize: "var(--text-sm)",
+                color: "var(--color-text-secondary)",
+              }}
+            >
+              <span style={{ fontSize: "1.4rem", lineHeight: 1 }}>{icon}</span>
+              <span>
+                <strong style={{ color: "var(--color-text-primary)" }}>
+                  {title}
+                </strong>{" "}
+                — {desc}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {/* ── Setup card ── */}
       <div className="card">
@@ -173,9 +228,7 @@ export default function HomePage() {
           <button
             className="btn btn-primary btn-lg"
             onClick={handleStart}
-            aria-label={`Start a ${focus} session for ${
-              gradeBand === "All" ? "all grades" : `grades ${gradeBand}`
-            }`}
+            aria-label={`Start a ${focus} session`}
           >
             Start Session
             <svg
@@ -197,60 +250,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── Tips ── */}
-      <section
-        style={{
-          marginTop: "var(--space-10)",
-          maxWidth: 680,
-          width: "100%",
-        }}
-        aria-label="How to use this app"
-      >
-        <h2
-          style={{
-            fontSize: "var(--text-md)",
-            fontWeight: 700,
-            color: "var(--color-text-secondary)",
-            marginBottom: "var(--space-4)",
-          }}
-        >
-          How it works
-        </h2>
-        <ul
-          style={{
-            listStyle: "none",
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--space-3)",
-          }}
-        >
-          {[
-            ["👂", "Listen", "Hear the word spoken aloud."],
-            ["🔍", "Chunk it", "See the word split into prefix, root, and suffix."],
-            ["✅", "Meaning Check", "Choose the right definition from 4 options."],
-            ["⭐", "Mark Tricky", "Flag words you want to revisit."],
-          ].map(([icon, title, desc]) => (
-            <li
-              key={title}
-              style={{
-                display: "flex",
-                gap: "var(--space-4)",
-                alignItems: "flex-start",
-                fontSize: "var(--text-sm)",
-                color: "var(--color-text-secondary)",
-              }}
-            >
-              <span style={{ fontSize: "1.4rem", lineHeight: 1 }}>{icon}</span>
-              <span>
-                <strong style={{ color: "var(--color-text-primary)" }}>
-                  {title}
-                </strong>{" "}
-                — {desc}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
     </main>
   );
 }

@@ -235,7 +235,9 @@ function SessionInner() {
             flexWrap: "wrap",
           }}
         >
-          <span className="badge">{currentCard.grade_band}</span>
+          <span className="badge">
+            {{ "3-4": "Level 1", "5-6": "Level 2", "7-8": "Level 3" }[currentCard.grade_band] ?? currentCard.grade_band}
+          </span>
           <span
             className="badge"
             style={{ background: "#f3e5f5", color: "#6a1b9a" }}
