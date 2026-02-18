@@ -553,6 +553,13 @@ h1, h2, h3 {
   }
 }
 
+/* ─── Mic listening pulse ──────────────────────────────────────────────────── */
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(230, 81, 0, 0.3); }
+  50%       { box-shadow: 0 0 0 8px rgba(230, 81, 0, 0); }
+}
+
 /* ─── Reduced motion ───────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

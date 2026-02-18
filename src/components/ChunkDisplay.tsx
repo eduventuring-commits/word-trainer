@@ -9,9 +9,75 @@ interface ChunkDisplayProps {
   card: WordCard;
 }
 
-// ─── Fallback parsers (used when word isn't in the static dictionary) ─────────
+// ─── Morpheme meaning lookup ──────────────────────────────────────────────────
+// Keyed by the bare morpheme text (lowercase, no dashes).
+// Covers all roots, prefixes, and suffixes in the dataset.
 
-/** Extract teacher-authored pipe-delimited syllables from decoding_notes. */
+const MORPHEME_MEANINGS: Record<string, string> = {
+  // roots
+  port:   "carry",
+  vis:    "see",
+  vid:    "see",
+  rupt:   "break",
+  scrib:  "write",
+  script: "write",
+  dict:   "say / tell",
+  struct: "build",
+  act:    "do",
+  form:   "shape",
+  mit:    "send",
+  miss:   "send",
+  aud:    "hear",
+  spec:   "look",
+  spect:  "look",
+  fer:    "carry",
+  // prefixes
+  trans:  "across",
+  re:     "again",
+  un:     "not",
+  pre:    "before",
+  dis:    "not / apart",
+  im:     "not",
+  "in":   "not / into",
+  sub:    "under",
+  inter:  "between",
+  ex:     "out",
+  con:    "together",
+  com:    "together",
+  de:     "down / away",
+  pro:    "forward",
+  // suffixes
+  tion:   "act of",
+  sion:   "act of",
+  ment:   "result of",
+  ness:   "state of",
+  ful:    "full of",
+  less:   "without",
+  able:   "able to be",
+  ible:   "able to be",
+  er:     "one who",
+  or:     "one who",
+  ly:     "in a ___ way",
+  ist:    "person who",
+  ous:    "full of",
+  ion:    "act of",
+  ation:  "act of",
+  ition:  "act of",
+  ive:    "tending to",
+  ity:    "state of",
+  al:     "relating to",
+  ic:     "relating to",
+  ize:    "to make",
+  ise:    "to make",
+};
+
+function getMorphemeMeaning(text: string): string | null {
+  const key = text.toLowerCase().replace(/^[-\s]+|[-\s]+$/g, "");
+  return MORPHEME_MEANINGS[key] ?? null;
+}
+
+// ─── Fallback parsers ─────────────────────────────────────────────────────────
+
 function parseSyllablesFromNotes(notes: string, word: string): string[] | null {
   if (!notes) return null;
   const match = notes.match(/(?:syllables?:\s+)?([a-z]+(?:\s*\|\s*[a-z]+)+)/i);
@@ -54,43 +120,23 @@ function getMorphemeFallback(card: WordCard): Array<{ text: string; role: string
 }
 
 // ─── Speech text normaliser ───────────────────────────────────────────────────
-// The Web Speech API reads isolated spelling chunks as standalone words.
-// "tion" → "eye-on", "sion" → "see-on", "ble" → "bull" (sometimes), etc.
-// We map problematic chunks to a phonetic equivalent BEFORE passing to speak().
-// The displayed spelling on the chip is never changed — only what gets spoken.
 
 const SPEECH_OVERRIDES: Record<string, string> = {
-  // -tion / -sion endings
   tion:  "shun",
   sion:  "shun",
   ition: "ish-un",
   ation: "ay-shun",
-  // -ble / -cle endings
   ble:   "bul",
   cle:   "kul",
-  // Reduced/silent chunks
   ence:  "ents",
   ance:  "ants",
-  // Vowel team chunks that read oddly in isolation
-  ough:  "oh",   // default — context-specific overrides below
+  ough:  "oh",
 };
 
-/**
- * Convert a spelling chunk into the text that should be passed to speechSynthesis.
- * Exact lowercase match → override; otherwise return the original text.
- */
 function toSpeechText(chunk: string): string {
   const key = chunk.toLowerCase();
-  // Exact match in override table
   if (SPEECH_OVERRIDES[key]) return SPEECH_OVERRIDES[key];
-
-  // Chunks that END with a problematic suffix but have a consonant before it
-  // e.g. "tion" inside "ac·tion" when the whole syllable is "tion" is handled above.
-  // For a chunk like "shun" or "sion" embedded differently — handled by exact match.
-
-  // -tion / -sion anywhere in chunk (e.g. morpheme chunk "ion")
   if (key === "ion") return "yun";
-
   return chunk;
 }
 
@@ -99,7 +145,7 @@ function toSpeechText(chunk: string): string {
 function SpeakerIcon() {
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+      xmlns="http://www.w3.org/2000/svg" width="12" height="12"
       viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
       aria-hidden="true" style={{ flexShrink: 0 }}
@@ -126,103 +172,116 @@ const ROLE_COLORS: Record<string, { bg: string; color: string; border: string }>
   suffix: { bg: "#e8f5e9", color: "#2e7d32", border: "#a5d6a7" },
 };
 
-// ─── Chunk chip ───────────────────────────────────────────────────────────────
+// ─── Compact Chip ─────────────────────────────────────────────────────────────
 
 interface ChipProps {
-  text: string;                             // spelling shown on button
-  soundCue?: string;                        // e.g. "/tuh/" shown below
-  sublabel: string;                         // e.g. "syllable 1" or "prefix"
+  text: string;
+  soundCue?: string;
+  meaning?: string | null;   // for morpheme view — shown below chip
+  sublabel: string;
   colorSet: { bg: string; color: string; border: string };
   onSpeak: (t: string) => void;
   speaking: boolean;
+  showMeaning?: boolean;
 }
 
-function Chip({ text, soundCue, sublabel, colorSet, onSpeak, speaking }: ChipProps) {
+function Chip({ text, soundCue, meaning, sublabel, colorSet, onSpeak, speaking, showMeaning }: ChipProps) {
   const [active, setActive] = useState(false);
 
   const handleClick = useCallback(() => {
     setActive(true);
     onSpeak(toSpeechText(text));
-    setTimeout(() => setActive(false), 700);
+    setTimeout(() => setActive(false), 600);
   }, [text, onSpeak]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
-      {/* The tappable button — shows spelling + speaker icon */}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+      {/* Tappable chip */}
       <button
         onClick={handleClick}
         disabled={speaking}
-        aria-label={`Hear: ${text}${soundCue ? ` (sounds like ${soundCue})` : ""}`}
+        aria-label={`Hear: ${text}`}
         title={`Tap to hear "${text}"`}
         style={{
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
-          gap: "3px",
-          padding: "var(--space-2) var(--space-4) 6px",
+          gap: "4px",
+          padding: "6px 14px",
           background: active ? colorSet.color : colorSet.bg,
           color: active ? "#fff" : colorSet.color,
           border: `2px solid ${colorSet.border}`,
-          borderRadius: "var(--radius-md)",
+          borderRadius: "var(--radius-lg)",
           cursor: speaking ? "not-allowed" : "pointer",
           transition: "background 120ms ease, color 120ms ease, transform 100ms ease",
           transform: active ? "scale(0.95)" : "scale(1)",
           fontFamily: "var(--font-body)",
-          fontSize: "var(--text-xl)",
+          fontSize: "var(--text-lg)",
           fontWeight: 700,
           letterSpacing: "0.03em",
-          minWidth: "3rem",
+          minWidth: "2.5rem",
+          whiteSpace: "nowrap",
         }}
       >
-        <span>{text}</span>
+        {text}
         <SpeakerIcon />
       </button>
 
-      {/* Sound cue — the pronunciation anchor */}
-      {soundCue && (
-        <span
-          aria-label={`sounds like ${soundCue}`}
-          style={{
-            fontFamily: "var(--font-ui)",
-            fontSize: "0.72rem",
-            fontWeight: 700,
-            color: colorSet.color,
-            letterSpacing: "0.02em",
-            background: colorSet.bg,
-            border: `1px solid ${colorSet.border}`,
-            borderRadius: "var(--radius-pill)",
-            padding: "1px 6px",
-          }}
-        >
+      {/* Sound cue badge (syllable mode) */}
+      {soundCue && !showMeaning && (
+        <span style={{
+          fontFamily: "var(--font-ui)",
+          fontSize: "0.68rem",
+          fontWeight: 700,
+          color: colorSet.color,
+          background: colorSet.bg,
+          border: `1px solid ${colorSet.border}`,
+          borderRadius: "var(--radius-pill)",
+          padding: "1px 6px",
+        }}>
           {soundCue}
         </span>
       )}
 
-      {/* Role / position label */}
-      <span
-        style={{
+      {/* Morpheme meaning (morpheme mode) */}
+      {showMeaning && meaning && (
+        <span style={{
           fontFamily: "var(--font-ui)",
-          fontSize: "0.6rem",
+          fontSize: "0.72rem",
           fontWeight: 700,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
           color: colorSet.color,
-          opacity: 0.6,
-        }}
-      >
+          textAlign: "center",
+          letterSpacing: "0.01em",
+        }}>
+          {meaning}
+        </span>
+      )}
+
+      {/* Role label (small, muted) */}
+      <span style={{
+        fontFamily: "var(--font-ui)",
+        fontSize: "0.58rem",
+        fontWeight: 700,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        color: colorSet.color,
+        opacity: 0.5,
+      }}>
         {sublabel}
       </span>
     </div>
   );
 }
 
-// ─── Separator ────────────────────────────────────────────────────────────────
+// ─── Dot separator ────────────────────────────────────────────────────────────
 
 function Dot() {
   return (
     <span aria-hidden="true" style={{
-      color: "var(--color-text-muted)", fontSize: "var(--text-xl)",
-      fontWeight: 400, paddingBottom: "var(--space-8)", userSelect: "none",
+      color: "var(--color-text-muted)",
+      fontSize: "var(--text-lg)",
+      fontWeight: 400,
+      paddingBottom: "20px",
+      userSelect: "none",
     }}>·</span>
   );
 }
@@ -231,8 +290,6 @@ function Dot() {
 
 function SoundView({ card, speak, speaking }: { card: WordCard; speak: (t: string) => void; speaking: boolean }) {
   const data = getWordData(card.word);
-
-  // Get syllables — prefer static data, fall back to notes parser, then whole word
   let syllables: string[];
   let cues: string[] | null = null;
 
@@ -243,18 +300,15 @@ function SoundView({ card, speak, speaking }: { card: WordCard; speak: (t: strin
     syllables = parseSyllablesFromNotes(card.decoding_notes, card.word) ?? [card.word];
   }
 
-  const fromDictionary = !!data;
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-      <p style={{ textAlign: "center", fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
-        Tap each syllable to hear it — then blend them together
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+        Tap each syllable to hear it, then blend together
       </p>
-
       <div
         role="group"
         aria-label={`${card.word} broken into syllables`}
-        style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "center", gap: "var(--space-3)" }}
+        style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "center", gap: "var(--space-2)" }}
       >
         {syllables.map((syl, i) => (
           <span key={i} style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-2)" }}>
@@ -266,54 +320,46 @@ function SoundView({ card, speak, speaking }: { card: WordCard; speak: (t: strin
               colorSet={SOUND_COLORS[i % SOUND_COLORS.length]}
               onSpeak={speak}
               speaking={speaking}
+              showMeaning={false}
             />
           </span>
         ))}
       </div>
-
-      <p style={{ textAlign: "center", fontSize: "var(--text-xs)", color: "var(--color-text-muted)", fontStyle: "italic" }}>
-        Now say the whole word: <strong>{card.word}</strong>
-      </p>
-
-      {!fromDictionary && (
-        <p style={{ textAlign: "center", fontSize: "0.65rem", color: "var(--color-text-muted)", opacity: 0.7 }}>
-          * Sound cues not available for this word
-        </p>
-      )}
     </div>
   );
 }
 
-// ─── Meaning view ─────────────────────────────────────────────────────────────
+// ─── Morpheme view ────────────────────────────────────────────────────────────
 
-function MeaningView({ card, speak, speaking }: { card: WordCard; speak: (t: string) => void; speaking: boolean }) {
+function MorphemeView({ card, speak, speaking }: { card: WordCard; speak: (t: string) => void; speaking: boolean }) {
   const data = getWordData(card.word);
 
-  // Build morpheme list — prefer static data (has role + cues), fall back to card data
-  let morphemes: Array<{ text: string; role: string; cue?: string }>;
+  let morphemes: Array<{ text: string; role: string; cue?: string; meaning: string | null }>;
 
   if (data) {
     morphemes = data.morphemes.map((m, i) => ({
       text: m,
       role: data.morphRoles[i] ?? "root",
       cue: data.morphCues[i],
+      meaning: getMorphemeMeaning(m),
     }));
   } else {
-    morphemes = getMorphemeFallback(card).map((m) => ({ text: m.text, role: m.role }));
+    morphemes = getMorphemeFallback(card).map((m) => ({
+      text: m.text,
+      role: m.role,
+      meaning: getMorphemeMeaning(m.text),
+    }));
   }
 
-  const hasData = !!(card.prefix || card.root || card.suffix);
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-      <p style={{ textAlign: "center", fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
-        Tap each word part to hear it
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+        Tap each word part — the meaning is shown below
       </p>
-
       <div
         role="group"
-        aria-label={`${card.word} broken into meaningful parts`}
-        style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "center", gap: "var(--space-3)" }}
+        aria-label={`${card.word} broken into word parts`}
+        style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "center", gap: "var(--space-2)" }}
       >
         {morphemes.map((m, i) => {
           const colorSet = ROLE_COLORS[m.role] ?? ROLE_COLORS.root;
@@ -323,102 +369,97 @@ function MeaningView({ card, speak, speaking }: { card: WordCard; speak: (t: str
               <Chip
                 text={m.text}
                 soundCue={m.cue}
+                meaning={m.meaning}
                 sublabel={m.role}
                 colorSet={colorSet}
                 onSpeak={speak}
                 speaking={speaking}
+                showMeaning={true}
               />
             </span>
           );
         })}
       </div>
-
-      {/* Morpheme label pills */}
-      {hasData && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)", justifyContent: "center" }}>
-          {card.prefix && (
-            <span style={{ padding: "2px var(--space-3)", background: "#e8f4fd", color: "#1565c0", border: "1.5px solid #90caf9", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 600 }}>
-              {card.prefix} = prefix
-            </span>
-          )}
-          {card.root && (
-            <span style={{ padding: "2px var(--space-3)", background: "#f3e5f5", color: "#6a1b9a", border: "1.5px solid #ce93d8", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 600 }}>
-              {card.root} = root
-            </span>
-          )}
-          {card.suffix && (
-            <span style={{ padding: "2px var(--space-3)", background: "#e8f5e9", color: "#2e7d32", border: "1.5px solid #a5d6a7", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 600 }}>
-              {card.suffix} = suffix
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Decoding notes */}
-      {card.decoding_notes && (
-        <div className="decoding-note">
-          {card.decoding_notes}
-        </div>
-      )}
     </div>
   );
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-type ChunkMode = "sound" | "meaning";
+type ChunkMode = "sound" | "morpheme";
 
 export default function ChunkDisplay({ card }: ChunkDisplayProps) {
   const { speak, speaking } = useSpeech();
-  const [mode, setMode] = useState<ChunkMode>("sound");
+  const [mode, setMode] = useState<ChunkMode | null>(null);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-5)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
 
-      {/* ── Mode toggle ── */}
-      <div
-        role="tablist"
-        aria-label="Chunk mode"
-        style={{
-          display: "flex",
-          background: "#ede9f7",
-          borderRadius: "var(--radius-pill)",
-          padding: "3px",
-          gap: "2px",
-          width: "fit-content",
-          margin: "0 auto",
-        }}
-      >
-        {(["sound", "meaning"] as ChunkMode[]).map((m) => (
-          <button
-            key={m}
-            role="tab"
-            aria-selected={mode === m}
-            onClick={() => setMode(m)}
-            style={{
-              padding: "var(--space-2) var(--space-5)",
-              borderRadius: "var(--radius-pill)",
-              border: "none",
-              fontFamily: "var(--font-ui)",
-              fontSize: "var(--text-xs)",
-              fontWeight: 700,
-              cursor: "pointer",
-              transition: "background 140ms ease, color 140ms ease",
-              background: mode === m ? "#ffffff" : "transparent",
-              color: mode === m ? "#6a1b9a" : "var(--color-text-muted)",
-              boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.12)" : "none",
-            }}
-          >
-            {m === "sound" ? "🔊 Chunk by Sound" : "📖 Chunk by Morphemes"}
-          </button>
-        ))}
+      {/* ── Two standalone buttons side by side ── */}
+      <div style={{ display: "flex", gap: "var(--space-3)", justifyContent: "center", flexWrap: "wrap" }}>
+        <button
+          onClick={() => setMode(mode === "sound" ? null : "sound")}
+          aria-pressed={mode === "sound"}
+          style={{
+            padding: "10px 20px",
+            borderRadius: "var(--radius-lg)",
+            border: mode === "sound" ? "2.5px solid #1565c0" : "2.5px solid #90caf9",
+            background: mode === "sound" ? "#1565c0" : "#e8f4fd",
+            color: mode === "sound" ? "#fff" : "#1565c0",
+            fontFamily: "var(--font-ui)",
+            fontSize: "var(--text-sm)",
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "all 140ms ease",
+            boxShadow: mode === "sound" ? "0 2px 8px rgba(21,101,192,0.25)" : "none",
+          }}
+        >
+          🔊 Chunk by Sound
+        </button>
+
+        <button
+          onClick={() => setMode(mode === "morpheme" ? null : "morpheme")}
+          aria-pressed={mode === "morpheme"}
+          style={{
+            padding: "10px 20px",
+            borderRadius: "var(--radius-lg)",
+            border: mode === "morpheme" ? "2.5px solid #6a1b9a" : "2.5px solid #ce93d8",
+            background: mode === "morpheme" ? "#6a1b9a" : "#f3e5f5",
+            color: mode === "morpheme" ? "#fff" : "#6a1b9a",
+            fontFamily: "var(--font-ui)",
+            fontSize: "var(--text-sm)",
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "all 140ms ease",
+            boxShadow: mode === "morpheme" ? "0 2px 8px rgba(106,27,154,0.25)" : "none",
+          }}
+        >
+          📖 Chunk by Morphemes
+        </button>
       </div>
 
-      {/* ── Panel ── */}
-      {mode === "sound"
-        ? <SoundView   card={card} speak={speak} speaking={speaking} />
-        : <MeaningView card={card} speak={speak} speaking={speaking} />
-      }
+      {/* ── Panel — only shown when a mode is active ── */}
+      {mode === "sound" && (
+        <div style={{
+          padding: "var(--space-4)",
+          background: "#f0f7ff",
+          borderRadius: "var(--radius-md)",
+          border: "1.5px solid #90caf9",
+        }}>
+          <SoundView card={card} speak={speak} speaking={speaking} />
+        </div>
+      )}
+
+      {mode === "morpheme" && (
+        <div style={{
+          padding: "var(--space-4)",
+          background: "#faf0ff",
+          borderRadius: "var(--radius-md)",
+          border: "1.5px solid #ce93d8",
+        }}>
+          <MorphemeView card={card} speak={speak} speaking={speaking} />
+        </div>
+      )}
     </div>
   );
 }

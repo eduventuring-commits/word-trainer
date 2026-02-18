@@ -13,11 +13,7 @@ import {
 import ProgressBar from "@/components/ProgressBar";
 import ListenButton from "@/components/ListenButton";
 import ChunkDisplay from "@/components/ChunkDisplay";
-import MeaningCheck from "@/components/MeaningCheck";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type PanelMode = "idle" | "chunk" | "meaning";
+import ReadAloudButton from "@/components/ReadAloudButton";
 
 // ─── Session inner (uses hooks that require Suspense boundary) ───────────────
 
@@ -36,18 +32,17 @@ function SessionInner() {
   // ── Navigation ──
   const [cardIndex, setCardIndex] = useState(0);
 
-  // ── Panel ──
-  const [panelMode, setPanelMode] = useState<PanelMode>("idle");
-
-  // ── Meaning check state ──
-  const [meaningAnswered, setMeaningAnswered] = useState(false);
+  // ── Chunk panel open ──
+  const [chunkOpen, setChunkOpen] = useState(false);
 
   // ── Progress ──
   const [progress, setProgress] = useState<SessionProgress>(defaultProgress());
 
+  // ── Has this card been marked practiced yet ──
+  const [practicedThisCard, setPracticedThisCard] = useState(false);
+
   // ─────────────────────────────────────────────────────────────────────────
 
-  // Fetch filtered cards from the API
   useEffect(() => {
     const params = new URLSearchParams({ gradeBand, focus });
     fetch(`/api/cards?${params.toString()}`)
@@ -57,7 +52,6 @@ function SessionInner() {
       })
       .then((data: { cards: WordCard[]; total: number }) => {
         setAllCards(data.cards);
-        // Initialise progress with session total
         const saved = loadProgress();
         setProgress({ ...saved, sessionTotal: data.total });
         setLoading(false);
@@ -72,33 +66,17 @@ function SessionInner() {
   const isLastCard = cardIndex >= allCards.length - 1;
   const isTricky = progress.trickyIds.includes(currentCard?.id ?? "");
 
-  // Reset panel when card changes
+  // Reset chunk panel and practiced flag when card changes
   useEffect(() => {
-    setPanelMode("idle");
-    setMeaningAnswered(false);
+    setChunkOpen(false);
+    setPracticedThisCard(false);
   }, [cardIndex]);
 
   // ── Handlers ──
 
   const handleChunkIt = useCallback(() => {
-    setPanelMode((m) => (m === "chunk" ? "idle" : "chunk"));
-    if (panelMode === "meaning") setMeaningAnswered(false);
-  }, [panelMode]);
-
-  const handleMeaningCheck = useCallback(() => {
-    setPanelMode((m) => (m === "meaning" ? "idle" : "meaning"));
+    setChunkOpen((o) => !o);
   }, []);
-
-  const handleMeaningResult = useCallback(
-    (correct: boolean) => {
-      if (!currentCard) return;
-      setMeaningAnswered(true);
-      const updated = markPracticed(progress, correct, currentCard.id);
-      setProgress(updated);
-      saveProgress(updated);
-    },
-    [currentCard, progress]
-  );
 
   const handleMarkTricky = useCallback(() => {
     if (!currentCard) return;
@@ -107,34 +85,34 @@ function SessionInner() {
     saveProgress(updated);
   }, [currentCard, progress]);
 
+  // Mark card as practiced (counted as correct) when user moves on
+  const handlePracticed = useCallback(() => {
+    if (!currentCard || practicedThisCard) return;
+    setPracticedThisCard(true);
+    const updated = markPracticed(progress, true, currentCard.id);
+    setProgress(updated);
+    saveProgress(updated);
+  }, [currentCard, progress, practicedThisCard]);
+
   const handleNext = useCallback(() => {
+    handlePracticed();
     if (isLastCard) {
-      // Session complete — go to home
       router.push("/");
       return;
     }
     setCardIndex((i) => i + 1);
-  }, [isLastCard, router]);
+  }, [isLastCard, router, handlePracticed]);
 
   const handleBack = useCallback(() => {
     setCardIndex((i) => Math.max(0, i - 1));
   }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Render states
-  // ─────────────────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
       <main className="page-wrapper" aria-busy="true" aria-label="Loading">
-        <div
-          style={{
-            textAlign: "center",
-            color: "var(--color-text-secondary)",
-            fontSize: "var(--text-md)",
-            marginTop: "var(--space-16)",
-          }}
-        >
+        <div style={{ textAlign: "center", color: "var(--color-text-secondary)", fontSize: "var(--text-md)", marginTop: "var(--space-16)" }}>
           Loading your cards…
         </div>
       </main>
@@ -145,22 +123,10 @@ function SessionInner() {
     return (
       <main className="page-wrapper">
         <div className="card" style={{ textAlign: "center" }}>
-          <p
-            style={{
-              color: "var(--color-wrong)",
-              fontSize: "var(--text-md)",
-              marginBottom: "var(--space-6)",
-            }}
-            role="alert"
-          >
+          <p style={{ color: "var(--color-wrong)", fontSize: "var(--text-md)", marginBottom: "var(--space-6)" }} role="alert">
             {error}
           </p>
-          <button
-            className="btn btn-primary"
-            onClick={() => router.push("/")}
-          >
-            Back to home
-          </button>
+          <button className="btn btn-primary" onClick={() => router.push("/")}>Back to home</button>
         </div>
       </main>
     );
@@ -173,47 +139,32 @@ function SessionInner() {
           <p style={{ fontSize: "var(--text-md)", marginBottom: "var(--space-6)" }}>
             No word cards matched your selection. Try a different filter.
           </p>
-          <button
-            className="btn btn-primary"
-            onClick={() => router.push("/")}
-          >
-            Back to home
-          </button>
+          <button className="btn btn-primary" onClick={() => router.push("/")}>Back to home</button>
         </div>
       </main>
     );
   }
 
-  // ── Complete screen ──
-  if (isLastCard && meaningAnswered && panelMode === "meaning") {
-    // Handled naturally — user presses Next
-  }
-
   return (
-    <main
-      className="page-wrapper"
-      style={{ gap: "var(--space-6)" }}
-    >
-      {/* ── Top bar ── */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-          maxWidth: 680,
-          gap: "var(--space-4)",
-        }}
-      >
+    <main className="page-wrapper" style={{ gap: "var(--space-4)" }}>
+
+      {/* ── Top bar: exit + progress ── */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        maxWidth: 680,
+        gap: "var(--space-4)",
+      }}>
         <button
           className="btn btn-ghost"
           onClick={() => router.push("/")}
-          aria-label="Exit session and return to home"
-          style={{ padding: "var(--space-2) var(--space-4)", fontSize: "var(--text-xs)" }}
+          aria-label="Exit session"
+          style={{ padding: "var(--space-2) var(--space-3)", fontSize: "var(--text-xs)", minHeight: "unset" }}
         >
           ← Exit
         </button>
-
         <div style={{ flex: 1 }}>
           <ProgressBar
             current={cardIndex}
@@ -224,91 +175,77 @@ function SessionInner() {
       </div>
 
       {/* ── Main card ── */}
-      <div className="card" style={{ position: "relative" }}>
+      <div className="card" style={{ padding: "var(--space-5) var(--space-6)" }}>
 
-        {/* Grade + part of speech badges */}
-        <div
-          style={{
-            display: "flex",
-            gap: "var(--space-2)",
-            marginBottom: "var(--space-6)",
-            flexWrap: "wrap",
-          }}
-        >
+        {/* Badges row */}
+        <div style={{ display: "flex", gap: "var(--space-2)", marginBottom: "var(--space-4)", flexWrap: "wrap", alignItems: "center" }}>
           <span className="badge">
             {{ "3-4": "Level 1", "5-6": "Level 2", "7-8": "Level 3" }[currentCard.grade_band] ?? currentCard.grade_band}
           </span>
-          <span
-            className="badge"
-            style={{ background: "#f3e5f5", color: "#6a1b9a" }}
-          >
+          <span className="badge" style={{ background: "#f3e5f5", color: "#6a1b9a" }}>
             {currentCard.part_of_speech}
           </span>
           {isTricky && (
-            <span
-              className="tricky-indicator"
-              aria-label="Marked as tricky"
-            >
-              ⭐ Tricky
-            </span>
+            <span className="tricky-indicator" aria-label="Marked as tricky">⭐ Tricky</span>
           )}
         </div>
 
-        {/* ── Large word display ── */}
-        <div
-          style={{ textAlign: "center", marginBottom: "var(--space-8)" }}
-        >
-          <p
-            className="word-display"
-            aria-label={`Word: ${currentCard.word}`}
-          >
+        {/* ── Word + sentence ── */}
+        <div style={{ textAlign: "center", marginBottom: "var(--space-4)" }}>
+          <p className="word-display" aria-label={`Word: ${currentCard.word}`}>
             {currentCard.word}
           </p>
-          <p
-            className="example-sentence"
-            style={{ marginTop: "var(--space-4)" }}
-          >
-            "{currentCard.example_sentence}"
+          <p className="example-sentence" style={{ marginTop: "var(--space-2)" }}>
+            &ldquo;{currentCard.example_sentence}&rdquo;
           </p>
         </div>
 
-        {/* ── Action buttons ── */}
+        {/* ── Read it aloud (mic check) ── */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-3)" }}>
+          <ReadAloudButton word={currentCard.word} />
+        </div>
+
+        {/* ── Definition (always visible) ── */}
+        <div style={{
+          background: "#f0faf4",
+          border: "1.5px solid #a5d6a7",
+          borderRadius: "var(--radius-md)",
+          padding: "var(--space-3) var(--space-4)",
+          marginBottom: "var(--space-4)",
+          textAlign: "center",
+        }}>
+          <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#2e7d32", display: "block", marginBottom: "2px" }}>
+            What it means
+          </span>
+          <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-primary)", fontWeight: 600, lineHeight: 1.5 }}>
+            {currentCard.student_friendly_meaning}
+          </p>
+        </div>
+
+        {/* ── Action buttons row ── */}
         <div
           role="group"
           aria-label="Session actions"
           style={{
             display: "flex",
             flexWrap: "wrap",
-            gap: "var(--space-3)",
+            gap: "var(--space-2)",
             justifyContent: "center",
-            marginBottom: "var(--space-6)",
+            marginBottom: chunkOpen ? "var(--space-4)" : "0",
           }}
         >
           {/* Listen */}
           <ListenButton word={currentCard.word} />
 
-          {/* Chunk it */}
+          {/* Chunk it — toggles chunk panel */}
           <button
-            className={`btn ${
-              panelMode === "chunk" ? "btn-accent" : "btn-ghost"
-            }`}
+            className={`btn ${chunkOpen ? "btn-accent" : "btn-ghost"}`}
             onClick={handleChunkIt}
-            aria-expanded={panelMode === "chunk"}
+            aria-expanded={chunkOpen}
             aria-controls="chunk-panel"
+            style={{ fontSize: "var(--text-sm)" }}
           >
             🔍 Chunk it
-          </button>
-
-          {/* Meaning Check */}
-          <button
-            className={`btn ${
-              panelMode === "meaning" ? "btn-accent" : "btn-ghost"
-            }`}
-            onClick={handleMeaningCheck}
-            aria-expanded={panelMode === "meaning"}
-            aria-controls="meaning-panel"
-          >
-            ✅ Meaning Check
           </button>
 
           {/* Mark Tricky */}
@@ -316,54 +253,33 @@ function SessionInner() {
             className={`btn ${isTricky ? "btn-tricky-active" : "btn-ghost"}`}
             onClick={handleMarkTricky}
             aria-pressed={isTricky}
-            aria-label={isTricky ? "Remove tricky mark" : "Mark this word as tricky"}
+            aria-label={isTricky ? "Remove tricky mark" : "Mark as tricky"}
+            style={{ fontSize: "var(--text-sm)" }}
           >
-            {isTricky ? "⭐ Marked Tricky" : "☆ Mark Tricky"}
+            {isTricky ? "⭐ Tricky!" : "☆ Mark Tricky"}
           </button>
         </div>
 
         {/* ── Chunk panel ── */}
-        {panelMode === "chunk" && (
+        {chunkOpen && (
           <section
             id="chunk-panel"
             aria-label="Word chunk breakdown"
             style={{
-              marginBottom: "var(--space-6)",
-              padding: "var(--space-6)",
+              marginBottom: "var(--space-4)",
+              padding: "var(--space-4)",
               background: "#faf9ff",
               borderRadius: "var(--radius-md)",
               border: "1.5px solid #e0d9f5",
             }}
           >
-            {/* key resets the tab state (sound/meaning) on every new card */}
             <ChunkDisplay key={currentCard.id} card={currentCard} />
           </section>
         )}
 
-        {/* ── Meaning Check panel ── */}
-        {panelMode === "meaning" && (
-          <section
-            id="meaning-panel"
-            aria-label="Meaning check quiz"
-            style={{
-              marginBottom: "var(--space-6)",
-              padding: "var(--space-6)",
-              background: "#f9fcf9",
-              borderRadius: "var(--radius-md)",
-              border: "1.5px solid #c8e6c9",
-            }}
-          >
-            <MeaningCheck
-              card={currentCard}
-              allCards={allCards}
-              onResult={handleMeaningResult}
-            />
-          </section>
-        )}
+        <hr className="divider" style={{ margin: "var(--space-4) 0" }} />
 
-        <hr className="divider" />
-
-        {/* ── Navigation buttons ── */}
+        {/* ── Navigation ── */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <button
             className="btn btn-ghost"
@@ -373,6 +289,7 @@ function SessionInner() {
             style={{
               opacity: cardIndex === 0 ? 0.35 : 1,
               cursor: cardIndex === 0 ? "default" : "pointer",
+              fontSize: "var(--text-sm)",
             }}
           >
             ← Back
@@ -381,49 +298,31 @@ function SessionInner() {
             className="btn btn-primary"
             onClick={handleNext}
             aria-label={isLastCard ? "Finish session" : "Go to next word"}
+            style={{ fontSize: "var(--text-sm)" }}
           >
-            {isLastCard ? "Finish Session ✓" : "Next →"}
+            {isLastCard ? "Finish ✓" : "Next →"}
           </button>
         </div>
       </div>
 
-      {/* ── Tricky count note ── */}
+      {/* ── Tricky count ── */}
       {progress.trickyIds.length > 0 && (
-        <p
-          style={{
-            fontSize: "var(--text-xs)",
-            color: "var(--color-text-muted)",
-            textAlign: "center",
-          }}
-          aria-live="polite"
-        >
-          {progress.trickyIds.length} word
-          {progress.trickyIds.length !== 1 ? "s" : ""} marked tricky
+        <p style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textAlign: "center" }} aria-live="polite">
+          {progress.trickyIds.length} word{progress.trickyIds.length !== 1 ? "s" : ""} marked tricky
         </p>
       )}
     </main>
   );
 }
 
-// ─── Page export with Suspense (required for useSearchParams) ────────────────
+// ─── Page export with Suspense ────────────────────────────────────────────────
 
 export default function SessionPage() {
   return (
     <Suspense
       fallback={
-        <main
-          className="page-wrapper"
-          aria-busy="true"
-          aria-label="Loading session"
-        >
-          <div
-            style={{
-              textAlign: "center",
-              color: "var(--color-text-secondary)",
-              fontSize: "var(--text-md)",
-              marginTop: "var(--space-16)",
-            }}
-          >
+        <main className="page-wrapper" aria-busy="true" aria-label="Loading session">
+          <div style={{ textAlign: "center", color: "var(--color-text-secondary)", fontSize: "var(--text-md)", marginTop: "var(--space-16)" }}>
             Loading your session…
           </div>
         </main>
