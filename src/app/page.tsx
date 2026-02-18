@@ -110,35 +110,39 @@ export default function HomePage() {
           maxWidth: 680,
           width: "100%",
           marginBottom: "var(--space-8)",
+          background: "#F4F8FF",
+          borderRadius: "var(--radius-lg)",
+          padding: "var(--space-6) var(--space-8)",
+          border: "2px solid #d0e0ff",
         }}
         aria-label="How to use this app"
       >
         <h2
           style={{
             fontSize: "var(--text-md)",
-            fontWeight: 700,
-            color: "var(--color-text-secondary)",
+            fontWeight: 800,
+            color: "var(--color-brand-dark)",
             marginBottom: "var(--space-4)",
           }}
         >
-          How it works
+          Here&apos;s how to play! 🎉
         </h2>
-        <ul
+        <ol
           style={{
             listStyle: "none",
             display: "flex",
             flexDirection: "column",
-            gap: "var(--space-3)",
+            gap: "var(--space-4)",
           }}
         >
           {[
-            ["👂", "Listen", "Hear the word spoken aloud."],
-            ["🔍", "Chunk it", "Break the word into syllables by sound, or by meaning using roots and affixes."],
-            ["✅", "Meaning Check", "Choose the right definition from 4 options."],
-            ["⭐", "Mark Tricky", "Flag words you want to revisit."],
+            ["👂", "Step 1 — Read & Listen", "Read the word and sentence out loud. If you are stuck, press Listen to hear it!"],
+            ["🔍", "Step 2 — Chunk it!", "Click Chunk it to break the word apart. Try Chunk by Sound (syllables) or Chunk by Morphemes (word parts with meanings)."],
+            ["✅", "Step 3 — Check the Meaning", "Pick the right definition and earn points. You've got this!"],
+            ["⭐", "Step 4 — Mark Tricky", "If a word is hard, mark it as tricky so you can practice it again."],
           ].map(([icon, title, desc]) => (
             <li
-              key={title}
+              key={title as string}
               style={{
                 display: "flex",
                 gap: "var(--space-4)",
@@ -147,16 +151,16 @@ export default function HomePage() {
                 color: "var(--color-text-secondary)",
               }}
             >
-              <span style={{ fontSize: "1.4rem", lineHeight: 1 }}>{icon}</span>
+              <span style={{ fontSize: "1.5rem", lineHeight: 1.2, flexShrink: 0 }}>{icon}</span>
               <span>
-                <strong style={{ color: "var(--color-text-primary)" }}>
+                <strong style={{ color: "var(--color-text-primary)", display: "block", marginBottom: "2px" }}>
                   {title}
-                </strong>{" "}
-                — {desc}
+                </strong>
+                {desc}
               </span>
             </li>
           ))}
-        </ul>
+        </ol>
       </section>
 
       {/* ── Setup card ── */}

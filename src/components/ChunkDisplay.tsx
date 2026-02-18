@@ -409,7 +409,7 @@ export default function ChunkDisplay({ card }: ChunkDisplayProps) {
               boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.12)" : "none",
             }}
           >
-            {m === "sound" ? "🔊 By Sound" : "📖 By Meaning"}
+            {m === "sound" ? "🔊 Chunk by Sound" : "📖 Chunk by Morphemes"}
           </button>
         ))}
       </div>

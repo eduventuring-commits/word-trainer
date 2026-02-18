@@ -12,12 +12,12 @@
 
 :root {
   /* Colours — high contrast, warm neutrals (easier for dyslexic readers) */
-  --color-bg: #fdf8f0;          /* warm off-white — less glare than pure white */
-  --color-surface: #ffffff;
+  --color-bg: #FFFDF7;          /* light cream — easy on the eyes */
+  --color-surface: #FAFAFA;
   --color-border: #d4c9b8;
-  --color-text-primary: #1a1208;   /* near-black with warm tone */
-  --color-text-secondary: #5a4e3c;
-  --color-text-muted: #8a7d6b;
+  --color-text-primary: #222222;   /* dark charcoal — readable without harsh black */
+  --color-text-secondary: #4a4a4a;
+  --color-text-muted: #7a7a7a;
 
   --color-brand: #2d6a4f;          /* accessible green */
   --color-brand-light: #52b788;
@@ -140,11 +140,11 @@ h1, h2, h3 {
   justify-content: center;
   gap: var(--space-2);
   font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 600;
+  font-size: var(--text-md);
+  font-weight: 700;
   line-height: 1;
-  padding: var(--space-4) var(--space-6);
-  border: 2px solid transparent;
+  padding: var(--space-4) var(--space-8);
+  border: 2.5px solid transparent;
   border-radius: var(--radius-pill);
   cursor: pointer;
   transition:
@@ -156,6 +156,7 @@ h1, h2, h3 {
   white-space: nowrap;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  min-height: 48px;
 }
 
 .btn:active {
@@ -191,7 +192,7 @@ h1, h2, h3 {
 }
 
 .btn-ghost:hover {
-  background: #f0ebe2;
+  background: #ededeb;
   border-color: var(--color-text-muted);
 }
 
@@ -213,8 +214,9 @@ h1, h2, h3 {
 }
 
 .btn-lg {
-  font-size: var(--text-md);
-  padding: var(--space-6) var(--space-10);
+  font-size: var(--text-lg);
+  padding: var(--space-6) var(--space-12);
+  min-height: 60px;
 }
 
 /* ─── Form controls ────────────────────────────────────────────────────────── */
@@ -545,8 +547,9 @@ h1, h2, h3 {
   }
 
   .btn-lg {
-    font-size: var(--text-sm);
+    font-size: var(--text-md);
     padding: var(--space-4) var(--space-8);
+    min-height: 52px;
   }
 }
 
