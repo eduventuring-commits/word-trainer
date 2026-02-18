@@ -225,55 +225,55 @@ function SessionInner() {
           <ReadAloudButton word={currentCard.word} />
         </div>
 
-        {/* ── Primary action buttons: Listen · Chunk by Sound · Chunk by Morphemes · Mark Tricky ── */}
+        {/* ── Action buttons: two rows ── */}
         <div
           role="group"
           aria-label="Word actions"
-          style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)", justifyContent: "center", marginBottom: (chunkOpen || meaningOpen) ? "var(--space-3)" : "0" }}
+          style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", alignItems: "center", marginBottom: (chunkOpen || meaningOpen) ? "var(--space-3)" : "0" }}
         >
-          {/* Listen */}
-          <ListenButton word={currentCard.word} />
+          {/* Row 1: Listen + Mark Tricky */}
+          <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "center", flexWrap: "wrap" }}>
+            <ListenButton word={currentCard.word} />
+            <button
+              className={`btn ${isTricky ? "btn-tricky-active" : "btn-ghost"}`}
+              onClick={handleMarkTricky}
+              aria-pressed={isTricky}
+              aria-label={isTricky ? "Remove tricky mark" : "Mark as tricky"}
+              style={{ fontSize: "var(--text-sm)" }}
+            >
+              {isTricky ? "⭐ Tricky!" : "☆ Mark Tricky"}
+            </button>
+          </div>
 
-          {/* Mark Tricky — moved up before chunk buttons */}
-          <button
-            className={`btn ${isTricky ? "btn-tricky-active" : "btn-ghost"}`}
-            onClick={handleMarkTricky}
-            aria-pressed={isTricky}
-            aria-label={isTricky ? "Remove tricky mark" : "Mark as tricky"}
-            style={{ fontSize: "var(--text-sm)" }}
-          >
-            {isTricky ? "⭐ Tricky!" : "☆ Mark Tricky"}
-          </button>
-
-          {/* Chunk by Sound */}
-          <button
-            className="btn btn-ghost"
-            onClick={handleChunkSound}
-            aria-pressed={chunkMode === "sound"}
-            style={{
-              fontSize: "var(--text-sm)",
-              background: chunkMode === "sound" ? "#1565c0" : undefined,
-              color: chunkMode === "sound" ? "#fff" : undefined,
-              borderColor: chunkMode === "sound" ? "#1565c0" : undefined,
-            }}
-          >
-            🔊 Chunk by Sound
-          </button>
-
-          {/* Chunk by Morphemes */}
-          <button
-            className="btn btn-ghost"
-            onClick={handleChunkMorpheme}
-            aria-pressed={chunkMode === "morpheme"}
-            style={{
-              fontSize: "var(--text-sm)",
-              background: chunkMode === "morpheme" ? "#6a1b9a" : undefined,
-              color: chunkMode === "morpheme" ? "#fff" : undefined,
-              borderColor: chunkMode === "morpheme" ? "#6a1b9a" : undefined,
-            }}
-          >
-            📖 Chunk by Morphemes
-          </button>
+          {/* Row 2: Chunk by Sound + Chunk by Morphemes */}
+          <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              className="btn btn-ghost"
+              onClick={handleChunkSound}
+              aria-pressed={chunkMode === "sound"}
+              style={{
+                fontSize: "var(--text-sm)",
+                background: chunkMode === "sound" ? "#1565c0" : undefined,
+                color: chunkMode === "sound" ? "#fff" : undefined,
+                borderColor: chunkMode === "sound" ? "#1565c0" : undefined,
+              }}
+            >
+              🔊 Chunk by Sound
+            </button>
+            <button
+              className="btn btn-ghost"
+              onClick={handleChunkMorpheme}
+              aria-pressed={chunkMode === "morpheme"}
+              style={{
+                fontSize: "var(--text-sm)",
+                background: chunkMode === "morpheme" ? "#6a1b9a" : undefined,
+                color: chunkMode === "morpheme" ? "#fff" : undefined,
+                borderColor: chunkMode === "morpheme" ? "#6a1b9a" : undefined,
+              }}
+            >
+              📖 Chunk by Morphemes
+            </button>
+          </div>
         </div>
 
         {/* ── Chunk panel ── */}
