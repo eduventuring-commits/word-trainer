@@ -52,7 +52,7 @@ export default function HomePage() {
       <header
         style={{
           textAlign: "center",
-          marginBottom: "var(--space-10)",
+          marginBottom: "var(--space-4)",
           maxWidth: 680,
           width: "100%",
         }}
@@ -61,15 +61,15 @@ export default function HomePage() {
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: "var(--space-3)",
-            marginBottom: "var(--space-4)",
+            gap: "var(--space-2)",
+            marginBottom: "var(--space-2)",
           }}
         >
           {/* Book icon */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="40"
-            height="40"
+            width="28"
+            height="28"
             viewBox="0 0 24 24"
             fill="none"
             stroke="var(--color-brand)"
@@ -83,7 +83,7 @@ export default function HomePage() {
           </svg>
           <h1
             style={{
-              fontSize: "var(--text-xl)",
+              fontSize: "var(--text-lg)",
               fontWeight: 800,
               color: "var(--color-brand-dark)",
             }}
@@ -93,14 +93,12 @@ export default function HomePage() {
         </div>
         <p
           style={{
-            fontSize: "var(--text-md)",
+            fontSize: "var(--text-xs)",
             color: "var(--color-text-secondary)",
-            lineHeight: "var(--leading-relaxed)",
+            lineHeight: "var(--leading-normal)",
           }}
         >
-          Build your reading skills one morpheme at a time.
-          <br />
-          Choose your level and focus, then start practicing.
+          Build your reading skills one morpheme at a time. Choose your level and focus, then start practicing.
         </p>
       </header>
 
@@ -109,20 +107,20 @@ export default function HomePage() {
         style={{
           maxWidth: 680,
           width: "100%",
-          marginBottom: "var(--space-8)",
+          marginBottom: "var(--space-4)",
           background: "#F4F8FF",
           borderRadius: "var(--radius-lg)",
-          padding: "var(--space-6) var(--space-8)",
+          padding: "var(--space-4) var(--space-6)",
           border: "2px solid #d0e0ff",
         }}
         aria-label="How to use this app"
       >
         <h2
           style={{
-            fontSize: "var(--text-md)",
+            fontSize: "var(--text-sm)",
             fontWeight: 800,
             color: "var(--color-brand-dark)",
-            marginBottom: "var(--space-4)",
+            marginBottom: "var(--space-3)",
           }}
         >
           Here&apos;s how to play! 🎉
@@ -132,30 +130,29 @@ export default function HomePage() {
             listStyle: "none",
             display: "flex",
             flexDirection: "column",
-            gap: "var(--space-4)",
+            gap: "var(--space-2)",
           }}
         >
           {[
-            ["👂", "Step 1 — Read & Listen", "Read the word and sentence out loud. If you are stuck, press Listen to hear it!"],
-            ["🔍", "Step 2 — Chunk it!", "Click Chunk it to break the word apart. Try Chunk by Sound (syllables) or Chunk by Morphemes (word parts with meanings)."],
-            ["✅", "Step 3 — Check the Meaning", "Pick the right definition and earn points. You've got this!"],
-            ["⭐", "Step 4 — Mark Tricky", "If a word is hard, mark it as tricky so you can practice it again."],
+            ["👂", "Read & Listen", "Read the word aloud. Press Listen if you need help!"],
+            ["🔍", "Chunk it!", "Break it by Sound (syllables) or Morphemes (word parts + meanings)."],
+            ["✅", "Find the Meaning", "Pick the right definition for bonus points!"],
+            ["⭐", "Mark Tricky", "Flag hard words to practice again."],
           ].map(([icon, title, desc]) => (
             <li
               key={title as string}
               style={{
                 display: "flex",
-                gap: "var(--space-4)",
-                alignItems: "flex-start",
-                fontSize: "var(--text-sm)",
+                gap: "var(--space-3)",
+                alignItems: "center",
+                fontSize: "var(--text-xs)",
                 color: "var(--color-text-secondary)",
               }}
             >
-              <span style={{ fontSize: "1.5rem", lineHeight: 1.2, flexShrink: 0 }}>{icon}</span>
+              <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>{icon}</span>
               <span>
-                <strong style={{ color: "var(--color-text-primary)", display: "block", marginBottom: "2px" }}>
-                  {title}
-                </strong>
+                <strong style={{ color: "var(--color-text-primary)" }}>{title}</strong>
+                {" — "}
                 {desc}
               </span>
             </li>
@@ -164,11 +161,11 @@ export default function HomePage() {
       </section>
 
       {/* ── Setup card ── */}
-      <div className="card">
+      <div className="card" style={{ padding: "var(--space-5) var(--space-6)" }}>
         <h2
           style={{
-            fontSize: "var(--text-lg)",
-            marginBottom: "var(--space-8)",
+            fontSize: "var(--text-md)",
+            marginBottom: "var(--space-4)",
             color: "var(--color-text-primary)",
           }}
         >
@@ -176,7 +173,7 @@ export default function HomePage() {
         </h2>
 
         {/* Grade band selector */}
-        <div className="form-group" style={{ marginBottom: "var(--space-6)" }}>
+        <div className="form-group" style={{ marginBottom: "var(--space-4)" }}>
           <label htmlFor="grade-select" className="form-label">
             Grade band
           </label>
@@ -195,7 +192,7 @@ export default function HomePage() {
         </div>
 
         {/* Focus selector */}
-        <div className="form-group" style={{ marginBottom: "var(--space-6)" }}>
+        <div className="form-group" style={{ marginBottom: "var(--space-4)" }}>
           <label htmlFor="focus-select" className="form-label">
             Focus area
           </label>
