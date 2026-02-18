@@ -5,8 +5,11 @@ import { useSpeech } from "@/hooks/useSpeech";
 import { getWordData } from "@/lib/wordData";
 import type { WordCard } from "@/lib/types";
 
+export type ChunkMode = "sound" | "morpheme";
+
 interface ChunkDisplayProps {
   card: WordCard;
+  mode: ChunkMode;   // controlled externally by session page
 }
 
 // ─── Morpheme meaning lookup ──────────────────────────────────────────────────
@@ -385,81 +388,37 @@ function MorphemeView({ card, speak, speaking }: { card: WordCard; speak: (t: st
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
+// Mode is controlled by the parent (session page) via the `mode` prop.
+// This component only renders the panel content — no buttons inside.
 
-type ChunkMode = "sound" | "morpheme";
-
-export default function ChunkDisplay({ card }: ChunkDisplayProps) {
+export default function ChunkDisplay({ card, mode }: ChunkDisplayProps) {
   const { speak, speaking } = useSpeech();
-  const [mode, setMode] = useState<ChunkMode | null>(null);
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-
-      {/* ── Two standalone buttons side by side ── */}
-      <div style={{ display: "flex", gap: "var(--space-3)", justifyContent: "center", flexWrap: "wrap" }}>
-        <button
-          onClick={() => setMode(mode === "sound" ? null : "sound")}
-          aria-pressed={mode === "sound"}
-          style={{
-            padding: "10px 20px",
-            borderRadius: "var(--radius-lg)",
-            border: mode === "sound" ? "2.5px solid #1565c0" : "2.5px solid #90caf9",
-            background: mode === "sound" ? "#1565c0" : "#e8f4fd",
-            color: mode === "sound" ? "#fff" : "#1565c0",
-            fontFamily: "var(--font-ui)",
-            fontSize: "var(--text-sm)",
-            fontWeight: 700,
-            cursor: "pointer",
-            transition: "all 140ms ease",
-            boxShadow: mode === "sound" ? "0 2px 8px rgba(21,101,192,0.25)" : "none",
-          }}
-        >
-          🔊 Chunk by Sound
-        </button>
-
-        <button
-          onClick={() => setMode(mode === "morpheme" ? null : "morpheme")}
-          aria-pressed={mode === "morpheme"}
-          style={{
-            padding: "10px 20px",
-            borderRadius: "var(--radius-lg)",
-            border: mode === "morpheme" ? "2.5px solid #6a1b9a" : "2.5px solid #ce93d8",
-            background: mode === "morpheme" ? "#6a1b9a" : "#f3e5f5",
-            color: mode === "morpheme" ? "#fff" : "#6a1b9a",
-            fontFamily: "var(--font-ui)",
-            fontSize: "var(--text-sm)",
-            fontWeight: 700,
-            cursor: "pointer",
-            transition: "all 140ms ease",
-            boxShadow: mode === "morpheme" ? "0 2px 8px rgba(106,27,154,0.25)" : "none",
-          }}
-        >
-          📖 Chunk by Morphemes
-        </button>
+  if (mode === "sound") {
+    return (
+      <div style={{
+        padding: "var(--space-4)",
+        background: "#f0f7ff",
+        borderRadius: "var(--radius-md)",
+        border: "1.5px solid #90caf9",
+      }}>
+        <SoundView card={card} speak={speak} speaking={speaking} />
       </div>
+    );
+  }
 
-      {/* ── Panel — only shown when a mode is active ── */}
-      {mode === "sound" && (
-        <div style={{
-          padding: "var(--space-4)",
-          background: "#f0f7ff",
-          borderRadius: "var(--radius-md)",
-          border: "1.5px solid #90caf9",
-        }}>
-          <SoundView card={card} speak={speak} speaking={speaking} />
-        </div>
-      )}
+  if (mode === "morpheme") {
+    return (
+      <div style={{
+        padding: "var(--space-4)",
+        background: "#faf0ff",
+        borderRadius: "var(--radius-md)",
+        border: "1.5px solid #ce93d8",
+      }}>
+        <MorphemeView card={card} speak={speak} speaking={speaking} />
+      </div>
+    );
+  }
 
-      {mode === "morpheme" && (
-        <div style={{
-          padding: "var(--space-4)",
-          background: "#faf0ff",
-          borderRadius: "var(--radius-md)",
-          border: "1.5px solid #ce93d8",
-        }}>
-          <MorphemeView card={card} speak={speak} speaking={speaking} />
-        </div>
-      )}
-    </div>
-  );
+  return null;
 }
