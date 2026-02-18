@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRecognition } from "@/hooks/useRecognition";
 
 interface ReadAloudButtonProps {
@@ -32,14 +31,7 @@ function MicIcon({ active }: { active: boolean }) {
 export default function ReadAloudButton({ word }: ReadAloudButtonProps) {
   const { state, transcript, supported, start, reset } = useRecognition(word);
 
-  // Auto-start listening as soon as the component mounts (no button press needed)
-  useEffect(() => {
-    if (supported && state === "idle") {
-      start();
-    }
-  // Only auto-start once on mount / when supported becomes true
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supported]);
+  // No auto-start — user taps the button to begin recording
 
   // Not supported (Firefox, Safari)
   if (!supported) {
@@ -50,7 +42,7 @@ export default function ReadAloudButton({ word }: ReadAloudButtonProps) {
     );
   }
 
-  // ── Listening — shown immediately, no button needed ──
+  // ── Listening ──
   if (state === "listening") {
     return (
       <div style={{
@@ -134,7 +126,7 @@ export default function ReadAloudButton({ word }: ReadAloudButtonProps) {
     );
   }
 
-  // idle — shouldn't normally show since we auto-start, but show a tap button as fallback
+  // ── Idle — tap to begin ──
   return (
     <button
       onClick={start}
