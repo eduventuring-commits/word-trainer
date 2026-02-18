@@ -193,9 +193,16 @@ function Chip({ text, soundCue, meaning, sublabel, colorSet, onSpeak, speaking, 
 
   const handleClick = useCallback(() => {
     setActive(true);
-    onSpeak(toSpeechText(text));
+    // If a soundCue exists (e.g. "/tuh/"), strip the slashes and use it as
+    // the spoken text — this ensures the speech engine says exactly what the
+    // pronunciation guide shows, rather than guessing from the raw spelling.
+    // Fall back to toSpeechText(text) only for words not in the dictionary.
+    const spoken = soundCue
+      ? soundCue.replace(/\//g, "").replace(/-/g, " ").trim()
+      : toSpeechText(text);
+    onSpeak(spoken);
     setTimeout(() => setActive(false), 600);
-  }, [text, onSpeak]);
+  }, [text, soundCue, onSpeak]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>

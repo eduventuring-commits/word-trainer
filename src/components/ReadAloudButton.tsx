@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRecognition } from "@/hooks/useRecognition";
 
 interface ReadAloudButtonProps {
@@ -31,35 +32,25 @@ function MicIcon({ active }: { active: boolean }) {
 export default function ReadAloudButton({ word }: ReadAloudButtonProps) {
   const { state, transcript, supported, start, reset } = useRecognition(word);
 
-  // Not supported (Firefox, Safari) — show nothing or a subtle note
+  // Auto-start listening as soon as the component mounts (no button press needed)
+  useEffect(() => {
+    if (supported && state === "idle") {
+      start();
+    }
+  // Only auto-start once on mount / when supported becomes true
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supported]);
+
+  // Not supported (Firefox, Safari)
   if (!supported) {
     return (
-      <span style={{
-        fontSize: "0.72rem",
-        color: "var(--color-text-muted)",
-        fontStyle: "italic",
-      }}>
-        🎤 Read-aloud check not available in this browser
+      <span style={{ fontSize: "0.72rem", color: "var(--color-text-muted)", fontStyle: "italic" }}>
+        🎤 Read-aloud not available in this browser
       </span>
     );
   }
 
-  // ── Idle: show the "Read it aloud" button ──
-  if (state === "idle") {
-    return (
-      <button
-        onClick={start}
-        className="btn btn-ghost"
-        aria-label="Read the word aloud into your microphone"
-        style={{ fontSize: "var(--text-sm)" }}
-      >
-        <MicIcon active={false} />
-        🎤 Read it aloud
-      </button>
-    );
-  }
-
-  // ── Listening ──
+  // ── Listening — shown immediately, no button needed ──
   if (state === "listening") {
     return (
       <div style={{
@@ -76,7 +67,7 @@ export default function ReadAloudButton({ word }: ReadAloudButtonProps) {
         animation: "pulse 1.2s ease-in-out infinite",
       }}>
         <MicIcon active={true} />
-        Listening… say the word!
+        🎤 Read it aloud now!
       </div>
     );
   }
@@ -98,15 +89,8 @@ export default function ReadAloudButton({ word }: ReadAloudButtonProps) {
           ✅ Great job! You said it!
         </div>
         <button
-          onClick={reset}
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: "0.72rem",
-            color: "var(--color-text-muted)",
-            cursor: "pointer",
-            textDecoration: "underline",
-          }}
+          onClick={start}
+          style={{ background: "none", border: "none", fontSize: "0.72rem", color: "var(--color-text-muted)", cursor: "pointer", textDecoration: "underline" }}
         >
           Try again
         </button>
@@ -137,15 +121,32 @@ export default function ReadAloudButton({ word }: ReadAloudButtonProps) {
         </div>
         <button
           onClick={start}
-          className="btn btn-ghost"
-          style={{ fontSize: "var(--text-xs)" }}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
+            background: "none", border: "1.5px solid var(--color-border)",
+            borderRadius: "var(--radius-pill)", padding: "4px 14px",
+            fontSize: "0.75rem", color: "var(--color-text-secondary)", cursor: "pointer",
+          }}
         >
-          <MicIcon active={false} />
-          Try again
+          <MicIcon active={false} /> Try again
         </button>
       </div>
     );
   }
 
-  return null;
+  // idle — shouldn't normally show since we auto-start, but show a tap button as fallback
+  return (
+    <button
+      onClick={start}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: "var(--space-2)",
+        background: "none", border: "1.5px solid var(--color-border)",
+        borderRadius: "var(--radius-pill)", padding: "6px 16px",
+        fontSize: "var(--text-sm)", fontWeight: 600,
+        color: "var(--color-text-secondary)", cursor: "pointer",
+      }}
+    >
+      <MicIcon active={false} /> 🎤 Tap to read aloud
+    </button>
+  );
 }

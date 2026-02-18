@@ -234,6 +234,17 @@ function SessionInner() {
           {/* Listen */}
           <ListenButton word={currentCard.word} />
 
+          {/* Mark Tricky — moved up before chunk buttons */}
+          <button
+            className={`btn ${isTricky ? "btn-tricky-active" : "btn-ghost"}`}
+            onClick={handleMarkTricky}
+            aria-pressed={isTricky}
+            aria-label={isTricky ? "Remove tricky mark" : "Mark as tricky"}
+            style={{ fontSize: "var(--text-sm)" }}
+          >
+            {isTricky ? "⭐ Tricky!" : "☆ Mark Tricky"}
+          </button>
+
           {/* Chunk by Sound */}
           <button
             className="btn btn-ghost"
@@ -262,17 +273,6 @@ function SessionInner() {
             }}
           >
             📖 Chunk by Morphemes
-          </button>
-
-          {/* Mark Tricky */}
-          <button
-            className={`btn ${isTricky ? "btn-tricky-active" : "btn-ghost"}`}
-            onClick={handleMarkTricky}
-            aria-pressed={isTricky}
-            aria-label={isTricky ? "Remove tricky mark" : "Mark as tricky"}
-            style={{ fontSize: "var(--text-sm)" }}
-          >
-            {isTricky ? "⭐ Tricky!" : "☆ Mark Tricky"}
           </button>
         </div>
 
