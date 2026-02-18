@@ -37,7 +37,7 @@ export default function ReadAloudButton({ word }: ReadAloudButtonProps) {
   if (!supported) {
     return (
       <span style={{ fontSize: "0.72rem", color: "var(--color-text-muted)", fontStyle: "italic" }}>
-        🎤 Read-aloud not available in this browser
+        🎤 Read-aloud works best in Chrome — not available in this browser
       </span>
     );
   }
