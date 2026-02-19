@@ -8,6 +8,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 interface ISpeechRecognition extends EventTarget {
   lang: string;
   interimResults: boolean;
+  continuous: boolean;
   maxAlternatives: number;
   start(): void;
   stop(): void;
@@ -18,6 +19,7 @@ interface ISpeechRecognition extends EventTarget {
 
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
+  resultIndex: number;
 }
 
 interface SpeechRecognitionResultList {
@@ -27,6 +29,7 @@ interface SpeechRecognitionResultList {
 
 interface SpeechRecognitionResult {
   readonly length: number;
+  readonly isFinal: boolean;
   [index: number]: SpeechRecognitionAlternative;
 }
 
@@ -65,11 +68,10 @@ function levenshtein(a: string, b: string): number {
 
 /**
  * Returns true if the spoken transcript contains a word close enough
- * to the target (within ~20% edit distance, minimum 1 error allowed).
+ * to the target (within ~25% edit distance, minimum 1 error allowed).
  */
 function isCloseEnough(target: string, transcript: string): boolean {
   const t = target.toLowerCase().trim();
-  // Check each spoken word against the target
   const spoken = transcript.toLowerCase().trim().split(/\s+/);
   const threshold = Math.max(1, Math.floor(t.length * 0.25));
   return spoken.some((w) => levenshtein(t, w) <= threshold);
@@ -80,6 +82,8 @@ export function useRecognition(targetWord: string) {
   const [transcript, setTranscript] = useState<string>("");
   const [supported, setSupported] = useState<boolean>(false);
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
+  // Prevent double-firing after stop() is called on match
+  const matchedRef = useRef(false);
 
   // Check support on mount
   useEffect(() => {
@@ -101,28 +105,47 @@ export function useRecognition(targetWord: string) {
     if (!SR) return;
 
     stop(); // cancel any existing session
+    matchedRef.current = false;
     setState("listening");
     setTranscript("");
 
     const rec = new SR();
     rec.lang = "en-US";
-    rec.interimResults = false;
+    rec.interimResults = true;   // fire on every word as it's heard
+    rec.continuous = true;       // keep listening until we stop it
     rec.maxAlternatives = 3;
     recognitionRef.current = rec;
 
     rec.onresult = (event) => {
-      const e = event as SpeechRecognitionEvent;
-      // Collect all alternatives
-      const results: string[] = [];
-      for (let i = 0; i < e.results[0].length; i++) {
-        results.push(e.results[0][i].transcript);
-      }
-      const best = results[0] ?? "";
-      setTranscript(best);
+      if (matchedRef.current) return; // already matched, ignore further results
 
-      // Check any alternative for a close match
-      const matched = results.some((r) => isCloseEnough(targetWord, r));
-      setState(matched ? "success" : "retry");
+      const e = event as SpeechRecognitionEvent;
+
+      // Scan all results (interim + final) for a match
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const result = e.results[i];
+        const alternatives: string[] = [];
+        for (let j = 0; j < result.length; j++) {
+          alternatives.push(result[j].transcript);
+        }
+        const best = alternatives[0] ?? "";
+        setTranscript(best);
+
+        const matched = alternatives.some((r) => isCloseEnough(targetWord, r));
+        if (matched) {
+          // Stop immediately on correct word — no waiting for silence
+          matchedRef.current = true;
+          recognitionRef.current?.stop();
+          recognitionRef.current = null;
+          setState("success");
+          return;
+        }
+
+        // Only show retry on a final (non-interim) result that didn't match
+        if (result.isFinal) {
+          setState("retry");
+        }
+      }
     };
 
     rec.onerror = () => {
@@ -131,6 +154,8 @@ export function useRecognition(targetWord: string) {
 
     rec.onend = () => {
       recognitionRef.current = null;
+      // If we ended without a match and were still listening, go to retry
+      setState((prev) => (prev === "listening" ? "retry" : prev));
     };
 
     rec.start();
@@ -138,6 +163,7 @@ export function useRecognition(targetWord: string) {
 
   const reset = useCallback(() => {
     stop();
+    matchedRef.current = false;
     setState("idle");
     setTranscript("");
   }, [stop]);

@@ -67,10 +67,10 @@ export default function HomePage() {
         {/* Sloth mascot */}
         <img
           src="/sloth-mascot.png"
-          alt="PhiloSLOTHical Sloth mascot"
+          alt="Sloth mascot"
           style={{
-            width: 110,
-            height: 110,
+            width: 150,
+            height: 150,
             objectFit: "contain",
             flexShrink: 0,
             filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.10))",
@@ -82,7 +82,7 @@ export default function HomePage() {
           <h1
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "var(--text-xl)",
+              fontSize: "var(--text-2xl)",
               fontWeight: 700,
               color: "var(--color-brand-dark)",
               lineHeight: 1.15,
