@@ -48,58 +48,68 @@ export default function HomePage() {
 
   return (
     <main className="page-wrapper">
-      {/* ── Header ── */}
+
+      {/* ── Hero ── */}
       <header
         style={{
-          textAlign: "center",
-          marginBottom: "var(--space-4)",
           maxWidth: 680,
           width: "100%",
+          marginBottom: "var(--space-4)",
+          background: "linear-gradient(135deg, #f0faf4 0%, #FFFDF7 100%)",
+          border: "2px solid var(--color-brand-light)",
+          borderRadius: "var(--radius-lg)",
+          padding: "var(--space-4) var(--space-6)",
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-4)",
         }}
       >
-        <div
+        {/* Sloth mascot */}
+        <img
+          src="/sloth-mascot.png"
+          alt="PhiloSLOTHical Sloth mascot"
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "var(--space-2)",
-            marginBottom: "var(--space-2)",
+            width: 110,
+            height: 110,
+            objectFit: "contain",
+            flexShrink: 0,
+            filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.10))",
           }}
-        >
-          {/* Book icon */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--color-brand)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-          </svg>
+        />
+
+        {/* Title text */}
+        <div style={{ textAlign: "left" }}>
           <h1
             style={{
               fontSize: "var(--text-lg)",
               fontWeight: 800,
               color: "var(--color-brand-dark)",
+              lineHeight: 1.2,
+              marginBottom: "var(--space-1)",
             }}
           >
-            Morphology and Multisyllable Words
+            Morphology &amp; Multisyllable Words
           </h1>
+          <p
+            style={{
+              fontSize: "var(--text-xs)",
+              fontWeight: 700,
+              color: "var(--color-brand)",
+              marginBottom: "var(--space-2)",
+            }}
+          >
+            🦥 with the PhiloSLOTHical Sloth
+          </p>
+          <p
+            style={{
+              fontSize: "0.85rem",
+              color: "var(--color-text-secondary)",
+              lineHeight: "var(--leading-normal)",
+            }}
+          >
+            Build your reading skills one morpheme at a time.
+          </p>
         </div>
-        <p
-          style={{
-            fontSize: "var(--text-xs)",
-            color: "var(--color-text-secondary)",
-            lineHeight: "var(--leading-normal)",
-          }}
-        >
-          Build your reading skills one morpheme at a time. Choose your level and focus, then start practicing.
-        </p>
       </header>
 
       {/* ── How it works ── */}
@@ -108,10 +118,10 @@ export default function HomePage() {
           maxWidth: 680,
           width: "100%",
           marginBottom: "var(--space-4)",
-          background: "#F4F8FF",
+          background: "#f0faf4",
           borderRadius: "var(--radius-lg)",
           padding: "var(--space-4) var(--space-6)",
-          border: "2px solid #d0e0ff",
+          border: "2px solid var(--color-brand-light)",
         }}
         aria-label="How to use this app"
       >
@@ -161,7 +171,13 @@ export default function HomePage() {
       </section>
 
       {/* ── Setup card ── */}
-      <div className="card" style={{ padding: "var(--space-5) var(--space-6)" }}>
+      <div
+        className="card"
+        style={{
+          padding: "var(--space-5) var(--space-6)",
+          borderTop: "4px solid var(--color-brand)",
+        }}
+      >
         <h2
           style={{
             fontSize: "var(--text-md)",
@@ -231,7 +247,7 @@ export default function HomePage() {
             onClick={handleStart}
             aria-label={`Start a ${focus} session`}
           >
-            Start Session
+            Start Session 🦥
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
