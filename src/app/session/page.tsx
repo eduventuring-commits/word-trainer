@@ -36,9 +36,12 @@ function SessionInner() {
   // ── Chunk mode: null = hidden, "sound" or "morpheme" = panel open ──
   const [chunkMode, setChunkMode] = useState<ChunkMode | null>(null);
 
-  // ── Meaning panel ──
+  // ── Meaning panel (BONUS quiz) ──
   const [meaningOpen, setMeaningOpen] = useState(false);
   const [meaningAnswered, setMeaningAnswered] = useState(false);
+
+  // ── Uncover the meaning (definition reveal) ──
+  const [meaningCovered, setMeaningCovered] = useState(true);
 
   // ── Progress ──
   const [progress, setProgress] = useState<SessionProgress>(defaultProgress());
@@ -75,6 +78,7 @@ function SessionInner() {
     setMeaningOpen(false);
     setMeaningAnswered(false);
     setPracticedThisCard(false);
+    setMeaningCovered(true);
   }, [cardIndex]);
 
   // ── Handlers ──
@@ -193,17 +197,14 @@ function SessionInner() {
           {isTricky && <span className="tricky-indicator" aria-label="Marked as tricky">⭐ Tricky</span>}
         </div>
 
-        {/* ── Word + sentence ── */}
+        {/* ── Word (no sentence here anymore) ── */}
         <div style={{ textAlign: "center", marginBottom: "var(--space-3)" }}>
           <p className="word-display" aria-label={`Word: ${currentCard.word}`}>
             {currentCard.word}
           </p>
-          <p className="example-sentence" style={{ marginTop: "var(--space-2)" }}>
-            &ldquo;{currentCard.example_sentence}&rdquo;
-          </p>
         </div>
 
-        {/* ── Definition (always visible) ── */}
+        {/* ── Example sentence in green strip ── */}
         <div style={{
           background: "#f0faf4",
           border: "1.5px solid #a5d6a7",
@@ -212,11 +213,11 @@ function SessionInner() {
           marginBottom: "var(--space-3)",
           textAlign: "center",
         }}>
-          <span style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#2e7d32", display: "block", marginBottom: "2px" }}>
-            What it means
+          <span style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#2e7d32", display: "block", marginBottom: "4px" }}>
+            Example
           </span>
-          <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-primary)", fontWeight: 600, lineHeight: 1.4 }}>
-            {currentCard.student_friendly_meaning}
+          <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-primary)", fontStyle: "italic", lineHeight: 1.5 }}>
+            &ldquo;{currentCard.example_sentence}&rdquo;
           </p>
         </div>
 
@@ -346,6 +347,63 @@ function SessionInner() {
                 onResult={handleMeaningResult}
               />
             </section>
+          )}
+        </div>
+
+        {/* ── Uncover the Meaning (definition reveal) ── */}
+        <div style={{
+          marginTop: "var(--space-3)",
+          borderTop: "2px dashed #a5d6a7",
+          paddingTop: "var(--space-3)",
+          textAlign: "center",
+        }}>
+          {meaningCovered ? (
+            <button
+              onClick={() => setMeaningCovered(false)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "var(--space-2)",
+                padding: "10px 22px",
+                background: "linear-gradient(135deg, #52b788, #2d6a4f)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "var(--radius-pill)",
+                fontFamily: "var(--font-ui)",
+                fontSize: "var(--text-sm)",
+                fontWeight: 800,
+                cursor: "pointer",
+                boxShadow: "0 3px 10px rgba(45,106,79,0.30)",
+                transition: "transform 120ms ease",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.04)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+            >
+              🔍 Uncover the Meaning
+            </button>
+          ) : (
+            <div>
+              <div style={{
+                background: "#f0faf4",
+                border: "1.5px solid #a5d6a7",
+                borderRadius: "var(--radius-md)",
+                padding: "var(--space-3) var(--space-4)",
+                marginBottom: "var(--space-2)",
+              }}>
+                <span style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#2e7d32", display: "block", marginBottom: "4px" }}>
+                  What it means
+                </span>
+                <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-primary)", fontWeight: 600, lineHeight: 1.4 }}>
+                  {currentCard.student_friendly_meaning}
+                </p>
+              </div>
+              <button
+                onClick={() => setMeaningCovered(true)}
+                style={{ background: "none", border: "none", fontSize: "0.72rem", color: "var(--color-text-muted)", cursor: "pointer", textDecoration: "underline" }}
+              >
+                Cover it back
+              </button>
+            </div>
           )}
         </div>
 

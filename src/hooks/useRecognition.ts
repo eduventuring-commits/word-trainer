@@ -148,5 +148,5 @@ export function useRecognition(targetWord: string) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetWord]);
 
-  return { state, transcript, supported, start, reset };
+  return { state, transcript, supported, start, stop, reset };
 }

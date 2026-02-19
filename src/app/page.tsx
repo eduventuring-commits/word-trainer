@@ -81,25 +81,16 @@ export default function HomePage() {
         <div style={{ textAlign: "left" }}>
           <h1
             style={{
-              fontSize: "var(--text-lg)",
-              fontWeight: 800,
-              color: "var(--color-brand-dark)",
-              lineHeight: 1.2,
-              marginBottom: "var(--space-1)",
-            }}
-          >
-            Morphology &amp; Multisyllable Words
-          </h1>
-          <p
-            style={{
-              fontSize: "var(--text-xs)",
+              fontFamily: "var(--font-display)",
+              fontSize: "var(--text-xl)",
               fontWeight: 700,
-              color: "var(--color-brand)",
+              color: "var(--color-brand-dark)",
+              lineHeight: 1.15,
               marginBottom: "var(--space-2)",
             }}
           >
-            🦥 with the PhiloSLOTHical Sloth
-          </p>
+            Multisyllable Word Detective
+          </h1>
           <p
             style={{
               fontSize: "0.85rem",
@@ -247,7 +238,7 @@ export default function HomePage() {
             onClick={handleStart}
             aria-label={`Start a ${focus} session`}
           >
-            Start Session 🦥
+            Start Session
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"

@@ -34,6 +34,7 @@
   --color-focus-ring: #2d6a4f;
 
   /* Typography */
+  --font-display: "Fredoka", system-ui, sans-serif;    /* playful rounded font for titles */
   --font-body: "Georgia", "Times New Roman", serif;   /* serifs aid letter distinction */
   --font-ui: system-ui, -apple-system, sans-serif;
   --font-mono: "Courier New", monospace;

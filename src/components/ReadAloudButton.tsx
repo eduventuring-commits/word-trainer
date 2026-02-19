@@ -30,6 +30,7 @@ function MicIcon({ active }: { active: boolean }) {
 
 export default function ReadAloudButton({ word }: ReadAloudButtonProps) {
   const { state, transcript, supported, start, reset } = useRecognition(word);
+  // reset() stops the mic and returns to idle — used for tap-to-stop
 
   // No auto-start — user taps the button to begin recording
 
@@ -42,25 +43,30 @@ export default function ReadAloudButton({ word }: ReadAloudButtonProps) {
     );
   }
 
-  // ── Listening ──
+  // ── Listening — tap again to stop ──
   if (state === "listening") {
     return (
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-3)",
-        padding: "var(--space-3) var(--space-4)",
-        background: "#fff8e1",
-        border: "2px solid #ffcc80",
-        borderRadius: "var(--radius-lg)",
-        fontSize: "var(--text-sm)",
-        fontWeight: 700,
-        color: "#e65100",
-        animation: "pulse 1.2s ease-in-out infinite",
-      }}>
+      <button
+        onClick={reset}
+        aria-label="Stop recording"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-3)",
+          padding: "var(--space-3) var(--space-4)",
+          background: "#fff8e1",
+          border: "2px solid #ffcc80",
+          borderRadius: "var(--radius-lg)",
+          fontSize: "var(--text-sm)",
+          fontWeight: 700,
+          color: "#e65100",
+          cursor: "pointer",
+          animation: "pulse 1.2s ease-in-out infinite",
+        }}
+      >
         <MicIcon active={true} />
-        🎤 Read it aloud now!
-      </div>
+        🎤 Recording… tap to stop
+      </button>
     );
   }
 
